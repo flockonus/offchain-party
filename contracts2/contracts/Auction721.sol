@@ -41,8 +41,8 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 
 	function bid() external payable {
 		require(auction.endsAtBlock > block.number, "auction ended");
-		// FIXME make sure its > 10%
-		require(msg.value > auction.price, "value sent cant be less than auction");
+		// make sure its > 10%
+		require(msg.value > (auction.price * 110) / 100, "value sent cant be less than auction");
 
 		uint64 endBlock = auction.endsAtBlock;
 		// get more eyes on this logic
@@ -62,7 +62,7 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 
 	function endAuction() external {
 		// anyone can call it to finish it
-		require(now > auction.endsAtBlock, "not over yet");
+		require(block.number > auction.endsAtBlock, "not over yet");
 
 		// TODO send profits
 		owner.transfer(address(this).balance);
