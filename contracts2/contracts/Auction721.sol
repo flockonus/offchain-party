@@ -10,11 +10,13 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 		uint64 endsAtBlock;
 		address winning;
 	}
-	// tokenId -> auction
-	// mapping(uint => Auction) auctions;
 	Auction public auction;
+	
+	event Bid(address from, uint value, uint auctionEnd);
 
 	address payable public owner;
+
+	uint64 constant blockIncrement = 20;
 
 	constructor() ERC721() public {
 		owner = msg.sender;
@@ -30,47 +32,42 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 		auction = Auction({
 			tokenId: tokenId,
 			endsAtBlock: uint64(endBlock),
-			winning: address(0),
+			winning: address(this),
 			price: initialPrice
 		});
+
+		emit Bid(address(this), initialPrice, endBlock);
 	}
 
 	function bid() external payable {
-		require(auction.endsAtBlock < block.number, "auction ended");
+		require(auction.endsAtBlock > block.number, "auction ended");
+		// FIXME make sure its > 10%
 		require(msg.value > auction.price, "value sent cant be less than auction");
 
 		uint64 endBlock = auction.endsAtBlock;
 		// get more eyes on this logic
-		if (block.number + 20 > auction.endsAtBlock) {
-			endBlock += 20;
+		if (block.number + blockIncrement > auction.endsAtBlock) {
+			endBlock += blockIncrement;
 		}
 		
 		auction = Auction({
 			tokenId: auction.tokenId,
 			endsAtBlock: uint64(endBlock),
-			winning: address(0),
+			winning: msg.sender,
 			price: msg.value
 		});
+
+		emit Bid(msg.sender, msg.value, endBlock);
 	}
 
 	function endAuction() external {
 		// anyone can call it to finish it
-		// require(msg.sender == owner, "only owner can mint");
-		require(auction.endsAtBlock < now, "not over yet");
-		require(auction.winning != address(0));
+		require(now > auction.endsAtBlock, "not over yet");
 
 		// TODO send profits
 		owner.transfer(address(this).balance);
 
 		// this can only be executed once
-		_transferFrom(owner, auction.winning, auction.tokenId);
-
-		// NOTE: do we want a single auction?
-		// auction = Auction({
-		// 	tokenId: 0,
-		// 	endsAtBlock: 0,
-		// 	winning: address(0),
-		// 	price: 0
-		// });
+		_transferFrom(address(this), auction.winning, auction.tokenId);
 	}
 }
