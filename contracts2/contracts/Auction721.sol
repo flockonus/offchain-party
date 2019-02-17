@@ -1,9 +1,9 @@
-pragma solidity >=0.4.25 <0.6.0;
+pragma solidity ^0.5.0;
 
-import 'openzeppelin-solidity/contracts/token/ERC721/ERC721Full.sol';
-import 'openzeppelin-solidity/contracts/token/ERC721/ERC721Mintable.sol';
+import 'openzeppelin-solidity/contracts/token/ERC721/ERC721.sol';
+// import 'openzeppelin-solidity/contracts/token/ERC721/ERC721Mintable.sol';
 
-contract Auction721 is ERC721Full, ERC721Mintable {
+contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 	struct Auction {
 		uint tokenId;
 		uint price;
@@ -14,9 +14,9 @@ contract Auction721 is ERC721Full, ERC721Mintable {
 	// mapping(uint => Auction) auctions;
 	Auction public auction;
 
-	address public owner;
+	address payable public owner;
 
-	constructor() ERC721Full("MyNFT", "MNFT") public {
+	constructor() ERC721() public {
 		owner = msg.sender;
   }
 
@@ -25,7 +25,7 @@ contract Auction721 is ERC721Full, ERC721Mintable {
 		require(auction.endsAtBlock == 0, "auction already exists");
 
 		// create a token belonging to this contract
-		mint(address(this), tokenId);
+		_mint(address(this), tokenId);
 
 		auction = Auction({
 			tokenId: tokenId,
@@ -54,36 +54,23 @@ contract Auction721 is ERC721Full, ERC721Mintable {
 	}
 
 	function endAuction() external {
-		// check it's over
+		// anyone can call it to finish it
+		// require(msg.sender == owner, "only owner can mint");
+		require(auction.endsAtBlock < now, "not over yet");
+		require(auction.winning != address(0));
+
 		// TODO send profits
-		
+		owner.transfer(address(this).balance);
 
-		auction = Auction({
-			tokenId: 0,
-			endsAtBlock: 0,
-			winning: address(0),
-			price: 0
-		});
+		// this can only be executed once
+		_transferFrom(owner, auction.winning, auction.tokenId);
+
+		// NOTE: do we want a single auction?
+		// auction = Auction({
+		// 	tokenId: 0,
+		// 	endsAtBlock: 0,
+		// 	winning: address(0),
+		// 	price: 0
+		// });
 	}
-
-  /**
-	we have this:
-   * @dev Function to mint tokens
-   * @param to The address that will receive the minted tokens.
-   * @param tokenId The token id to mint.
-   * @return A boolean that indicates if the operation was successful.
-   *
-  function mint(
-    address to,
-    uint256 tokenId
-  )
-    public
-    onlyMinter
-    returns (bool)
-  {
-    _mint(to, tokenId);
-    return true;
-  }
-	*/
-	
 }
