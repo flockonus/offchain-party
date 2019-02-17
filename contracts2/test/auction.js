@@ -101,4 +101,31 @@ contract('Auction721', (accounts) => {
       from: accounts[1]
     });
   });
+
+  it('bid war between 2', async function() {
+    const tokenId = 42;
+    const instance = await Auction721.new();
+
+    let nowBlock = await web3.eth.getBlockNumber();
+    console.log('current block', nowBlock);
+    const targetEnd = nowBlock + 5;
+
+    await instance.mintAndAuction(tokenId, 100, targetEnd);
+
+    // p1 bids
+    await instance.bid({value: 1000, from: accounts[1]});
+    console.log(await getAuction(instance));
+
+    // p2 bids
+    await instance.bid({value: 1111, from: accounts[2]});
+    console.log(await getAuction(instance));
+
+    // p1 bids AGAIN
+    await instance.bid({value: 2222, from: accounts[1]});
+    console.log(await getAuction(instance));
+
+    await mineNBlocks(20, accounts);
+
+    await instance.endAuction();
+  });
 });

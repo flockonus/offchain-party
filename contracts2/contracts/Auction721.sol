@@ -16,7 +16,7 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 
 	address payable public owner;
 
-	uint64 constant blockIncrement = 20;
+	uint64 constant BID_BLOCK_INCREMENT = 20;
 
 	constructor() ERC721() public {
 		owner = msg.sender;
@@ -45,9 +45,9 @@ contract Auction721 is ERC721 /*, ERC721Mintable*/ {
 		require(msg.value > (auction.price * 110) / 100, "value sent cant be less than auction");
 
 		uint64 endBlock = auction.endsAtBlock;
-		// get more eyes on this logic
-		if (block.number + blockIncrement > auction.endsAtBlock) {
-			endBlock += blockIncrement;
+
+		if (block.number + BID_BLOCK_INCREMENT > auction.endsAtBlock) {
+			endBlock += BID_BLOCK_INCREMENT;
 		}
 		
 		auction = Auction({
