@@ -1,0 +1,18 @@
+{
+  "name": "contracts2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "truffle": "truffle"
+  },
+  "author": "we, the ppl",
+  "dependencies": {
+    "openzeppelin-solidity": "2.1.2",
+    "truffle": "5.0.4"
+  }
+}
